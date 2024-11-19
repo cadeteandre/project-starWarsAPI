@@ -17,12 +17,30 @@ ul {
   list-style: none;
   display: flex;
   gap: 1rem;
+  padding: 0.3rem;
+  justify-content: center;
+}
+
+ul button {
+  background-color: #000000e9;
+  color: gold;
+  border-radius: 5px;
+  padding: 0.3rem;
+}
+
+button:hover {
+  cursor: pointer;
 }
 
 main {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+#showResults {
+  display: flex;
+  gap: 1rem;
 }
 
 #showResults ul {
@@ -32,4 +50,6 @@ main {
   border-radius: 10px;
   box-shadow: #00000049 -4px -4px 4px inset;
   padding: 0.8rem;
+  background-color: #000000d9;
+  color: gold
 }

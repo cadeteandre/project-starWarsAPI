@@ -1,5 +1,5 @@
 import { ICharacters, ICharactersResult } from './interfaces/ICharacters';
-import { IFilms } from './interfaces/IFilms';
+import { IFilms, IFilmsResult } from './interfaces/IFilms';
 import { IPlanets, IPlanetsResult } from './interfaces/IPlanets';
 import './style.css'
 
@@ -18,10 +18,10 @@ const showResults = document.querySelector('#showResults') as HTMLDivElement;
 //* -------------------- Declaring functions --------------------
 
 //| -------------------- Fetch requests --------------------
-async function fetchFilms(url: string): Promise<string[]> {
+async function fetchFilms(url: string): Promise<IFilmsResult[]> {
   const response = await fetch(url);
   const films: IFilms = await response.json();
-  return films.results.map((film) => film.title);
+  return films.results.map((film) => film);
 }
 
 async function fetchCharacters(url: string): Promise<ICharactersResult[]> {
@@ -57,18 +57,45 @@ async function fetchPlanets(url: string): Promise<IPlanetsResult[]> {
 }
 
 //| -------------------- Display data --------------------
-async function displayFilms(data: Promise<string[]>): Promise<void> {
+async function displayFilms(data: Promise<IFilmsResult[]>): Promise<void> {
   const filmsContainer = document.createElement('div') as HTMLDivElement;
   const ulElement = document.createElement('ul') as HTMLUListElement;
 
-  (await data).forEach((title) => {
+  (await data).forEach((film: IFilmsResult) => {
     const liElement = document.createElement('li') as HTMLLIElement;
-    liElement.textContent = title;
+    liElement.textContent = `Star Wars: ${film.title}`;
     ulElement.appendChild(liElement);
   })
 
   filmsContainer.appendChild(ulElement);
   showResults.appendChild(filmsContainer);
+}
+
+async function displayCharacters(data: Promise<ICharactersResult[]>): Promise <void> {
+  const characterContainer = document.createElement('div') as HTMLDivElement;
+  const ulElement = document.createElement('ul') as HTMLUListElement;
+
+  (await data).forEach((character: ICharactersResult) => {
+    const liElement = document.createElement('li') as HTMLLIElement;
+    liElement.textContent = `${character.name}`;
+    ulElement.appendChild(liElement);
+  })
+
+  characterContainer.appendChild(ulElement);
+  showResults.appendChild(characterContainer);
+}
+async function displayPlanets(data: Promise<IPlanetsResult[]>): Promise <void> {
+  const planetsContainer = document.createElement('div') as HTMLDivElement;
+  const ulElement = document.createElement('ul') as HTMLUListElement;
+
+  (await data).forEach((planet: IPlanetsResult) => {
+    const liElement = document.createElement('li') as HTMLLIElement;
+    liElement.textContent = `${planet.name}`;
+    ulElement.appendChild(liElement);
+  })
+
+  planetsContainer.appendChild(ulElement);
+  showResults.appendChild(planetsContainer);
 }
 
 //* -------------------- Events --------------------
@@ -79,14 +106,10 @@ buttons.forEach((button) => {
         (await displayFilms(fetchFilms(`${BASE_URL}${button.value}`)));
         break;
       case 'people':
-        (await fetchCharacters(`${BASE_URL}${button.value}`)).forEach((character) => {
-          console.log(character.name);
-        });
+        (await displayCharacters(fetchCharacters(`${BASE_URL}${button.value}`)));
         break;
       case 'planets':
-        (await fetchPlanets(`${BASE_URL}${button.value}`)).forEach((planet) => {
-          console.log(planet.name);
-        });
+        (await displayPlanets(fetchPlanets(`${BASE_URL}${button.value}`)));
         break;
     }
   })
