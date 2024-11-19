@@ -16,6 +16,7 @@ const searchSelect = document.querySelector('#searchSelect') as HTMLSelectElemen
 const showResults = document.querySelector('#showResults') as HTMLDivElement;
 
 //* -------------------- Declaring functions --------------------
+
 //| -------------------- Fetch requests --------------------
 async function fetchFilms(url: string): Promise<string[]> {
   const response = await fetch(url);
@@ -55,12 +56,27 @@ async function fetchPlanets(url: string): Promise<IPlanetsResult[]> {
   return allPlanets;
 }
 
+//| -------------------- Display data --------------------
+async function displayFilms(data: Promise<string[]>): Promise<void> {
+  const filmsContainer = document.createElement('div') as HTMLDivElement;
+  const ulElement = document.createElement('ul') as HTMLUListElement;
+
+  (await data).forEach((title) => {
+    const liElement = document.createElement('li') as HTMLLIElement;
+    liElement.textContent = title;
+    ulElement.appendChild(liElement);
+  })
+
+  filmsContainer.appendChild(ulElement);
+  showResults.appendChild(filmsContainer);
+}
+
 //* -------------------- Events --------------------
 buttons.forEach((button) => {
   button.addEventListener('click', async () => {
     switch(button.value) {
       case 'films':
-        (await fetchFilms(`${BASE_URL}${button.value}`)).forEach((title) => console.log(title));
+        (await displayFilms(fetchFilms(`${BASE_URL}${button.value}`)));
         break;
       case 'people':
         (await fetchCharacters(`${BASE_URL}${button.value}`)).forEach((character) => {
