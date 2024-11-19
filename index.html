@@ -11,9 +11,9 @@
     <div id="app">
       <header>
         <ul>
-          <li><button value="films">Films</button></li>
-          <li><button value="people">Characters</button></li>
-          <li><button value="planets">Planets</button></li>
+          <li><button class="show__data" value="films">Films</button></li>
+          <li><button class="show__data" value="people">Characters</button></li>
+          <li><button class="show__data" value="planets">Planets</button></li>
         </ul>
       </header>
       <main>
@@ -21,9 +21,10 @@
           <input type="text" id="searchInput">
           <select name="searchType" id="searchSelect">
             <option value="films">Films</option>
-            <option value="characters">Characters</option>
+            <option value="people">Characters</option>
             <option value="planets">Planets</option>
           </select>
+          <button id="searchBtn">Search</button>
         </div>
         <div id="showResults"></div>
       </main>

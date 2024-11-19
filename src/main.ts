@@ -5,15 +5,13 @@ import './style.css'
 
 //* -------------------- Saving endpoints --------------------
 const BASE_URL = 'https://swapi.dev/api/';
-// const PEOPLE_URL = `${BASE_URL}people`;
-// const PLANETS_URL = `${BASE_URL}planets`;
-// const FILMS_URL = `${BASE_URL}films`;
 
 //* -------------------- Selecting HTML elements --------------------
-const buttons = document.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+const buttons = document.querySelectorAll('.show__data') as NodeListOf<HTMLButtonElement>;
 const searchInput = document.querySelector('#searchInput') as HTMLInputElement;
 const searchSelect = document.querySelector('#searchSelect') as HTMLSelectElement;
 const showResults = document.querySelector('#showResults') as HTMLDivElement;
+const searchBtn = document.querySelector('#searchBtn') as HTMLButtonElement;
 
 //* -------------------- Declaring functions --------------------
 
@@ -120,6 +118,7 @@ buttons.forEach((button) => {
   button.addEventListener('click', async () => {
     showResults.innerHTML = '';
     switch(button.value) {
+      //| -------------------- Fetch and Display Films --------------------
       case 'films':
         try {
           const response = await fetch(`${BASE_URL}${button.value}`);
@@ -135,6 +134,7 @@ buttons.forEach((button) => {
           console.error(error);
         }
         break;
+        //| -------------------- Fetch and Display Characters --------------------
       case 'people':
         try {
           (await displayCharacters(fetchCharacters(`${BASE_URL}${button.value}`)));
@@ -142,6 +142,7 @@ buttons.forEach((button) => {
           console.error(error);
         }
         break;
+        //| -------------------- Fetch and Display Planets --------------------
       case 'planets':
         try {
           const response = await fetch(`${BASE_URL}${button.value}`);
@@ -167,5 +168,53 @@ buttons.forEach((button) => {
         }
         break;
     }
+    searchInput.value = '';
   })
+})
+//| -------------------- Search Data --------------------
+searchBtn.addEventListener('click', async () => {
+  showResults.innerHTML = '';
+
+  const response = await fetch(`${BASE_URL}${searchSelect.value}/?search=${searchInput.value}`);
+  const data: any = await response.json();
+  console.log(data.results);
+  
+
+  switch(searchSelect.value) {
+    case 'films':
+      data as IFilmsResult[];
+      data.results.forEach(async (film: IFilmsResult) => {
+        const filmContainer = document.createElement('div') as HTMLDivElement;
+        filmContainer.classList.add('container');
+        filmContainer.innerHTML = await displayFilms(film);
+        showResults.appendChild(filmContainer);
+      })
+      break;
+    case 'people':
+      data as ICharactersResult[];
+      data.results.forEach(async (character: ICharactersResult) => {
+        const characterContainer = document.createElement('div') as HTMLDivElement;
+        characterContainer.classList.add('container');
+        characterContainer.innerHTML = `
+            <p>Name: ${character.name}</p>
+            <p>Height: ${character.height} cm</p>character
+            <p>Mass: ${character.mass} Kg</p>
+            <p>Birth Year: ${character.birth_year}</p>
+            <p>Gender: ${character.gender}</p>
+            <p>Homeworld: ${await fetchHomeworld(character.homeworld)}</p>
+        `;
+        showResults.appendChild(characterContainer);
+      })
+      break;
+    case 'planets':
+      data as IPlanetsResult[];
+      data.results.forEach(async (planet: IPlanetsResult) => {
+        const container = document.createElement('div') as HTMLDivElement;
+        container.classList.add('container');
+        container.innerHTML = await displayPlanets(planet);
+        showResults.appendChild(container);
+      })
+      break;
+  }
+  searchInput.value = '';
 })
