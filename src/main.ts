@@ -18,12 +18,6 @@ const showResults = document.querySelector('#showResults') as HTMLDivElement;
 //* -------------------- Declaring functions --------------------
 
 //| -------------------- Fetch requests --------------------
-async function fetchFilms(url: string): Promise<IFilmsResult[]> {
-  const response = await fetch(url);
-  const films: IFilms = await response.json();
-  return films.results.map((film) => film);
-}
-
 async function fetchCharacters(url: string): Promise<ICharactersResult[]> {
   const response = await fetch(url);
   const characters: ICharacters = await response.json();
@@ -40,76 +34,137 @@ async function fetchCharacters(url: string): Promise<ICharactersResult[]> {
   return allCharacters;
 }
 
-async function fetchPlanets(url: string): Promise<IPlanetsResult[]> {
-  const response = await fetch(url);
-  const planets: IPlanets = await response.json();
-  let pagesCount: number = 1;
-  const allPlanets: IPlanetsResult[] = [];
+async function fetchFilmCharacters(locationCharacters: string[]): Promise<string> {
+  const allCharactersName: string[] = [];
+  for(const character of locationCharacters) {
+    try {
+      const response = await fetch(character);
+      const data: ICharactersResult = await response.json();
+      allCharactersName.push(data.name);
+    } catch(error) {
+      console.error(error);
+    }
+  }
 
-  do {
-    const response = await fetch(`${url}/?page=${pagesCount}`);
-    const data: IPlanets = await response.json();
-    data.results.forEach((planet) => allPlanets.push(planet));
-    pagesCount++;
-  } while(pagesCount <= Math.ceil(planets.count / 10));
+  return allCharactersName.join(', ');
+}
 
-  return allPlanets;
+async function fetchPlanetResidents(locationResidents: string[]): Promise<string> {
+  const allResidents: string[] = [];
+  for(const character of locationResidents) {
+    try {
+      const response = await fetch(character);
+      const data: ICharactersResult = await response.json();
+      allResidents.push(data.name);
+    } catch(error) {
+      console.error(error);
+    }
+  }
+
+  return allResidents.join(', ');
 }
 
 //| -------------------- Display data --------------------
-async function displayFilms(data: Promise<IFilmsResult[]>): Promise<void> {
-  const filmsContainer = document.createElement('div') as HTMLDivElement;
-  const ulElement = document.createElement('ul') as HTMLUListElement;
-
-  (await data).forEach((film: IFilmsResult) => {
-    const liElement = document.createElement('li') as HTMLLIElement;
-    liElement.textContent = `Star Wars: ${film.title}`;
-    ulElement.appendChild(liElement);
-  })
-
-  filmsContainer.appendChild(ulElement);
-  showResults.appendChild(filmsContainer);
+async function displayFilms(data: IFilmsResult): Promise<string> {
+    const characters = await fetchFilmCharacters(data.characters)
+    const resultAsString = `
+        <p>Star Wars: ${data.title}</p>
+        <p>Episode: ${data.episode_id}</p>
+        <p>Director: ${data.director}</p>
+        <p>Producer: ${data.producer}</p>
+        <p>Release Date: ${data.release_date}</p>
+        <p>Characters: ${characters}</p>
+    `;
+    return resultAsString;
 }
 
 async function displayCharacters(data: Promise<ICharactersResult[]>): Promise <void> {
-  const characterContainer = document.createElement('div') as HTMLDivElement;
-  const ulElement = document.createElement('ul') as HTMLUListElement;
-
-  (await data).forEach((character: ICharactersResult) => {
-    const liElement = document.createElement('li') as HTMLLIElement;
-    liElement.textContent = `${character.name}`;
-    ulElement.appendChild(liElement);
+  (await data).forEach(async (character: ICharactersResult) => {
+    const characterContainer = document.createElement('div') as HTMLDivElement;
+    characterContainer.classList.add('container');
+    characterContainer.innerHTML = `
+        <p>Name: ${character.name}</p>
+        <p>Height: ${character.height} cm</p>
+        <p>Mass: ${character.mass} Kg</p>
+        <p>Birth Year: ${character.birth_year}</p>
+        <p>Gender: ${character.gender}</p>
+        <p>Homeworld: ${await fetchHomeworld(character.homeworld)}</p>
+    `;
+    showResults.appendChild(characterContainer);
   })
-
-  characterContainer.appendChild(ulElement);
-  showResults.appendChild(characterContainer);
 }
-async function displayPlanets(data: Promise<IPlanetsResult[]>): Promise <void> {
-  const planetsContainer = document.createElement('div') as HTMLDivElement;
-  const ulElement = document.createElement('ul') as HTMLUListElement;
 
-  (await data).forEach((planet: IPlanetsResult) => {
-    const liElement = document.createElement('li') as HTMLLIElement;
-    liElement.textContent = `${planet.name}`;
-    ulElement.appendChild(liElement);
-  })
+async function fetchHomeworld(url: string): Promise<string> {
+  const response = await fetch(url);
+  const data: any = await response.json();
+  console.log(data);
+  return data.name;
+}
 
-  planetsContainer.appendChild(ulElement);
-  showResults.appendChild(planetsContainer);
+async function displayPlanets(data: IPlanetsResult): Promise <string> {
+  const residents = await fetchPlanetResidents(data.residents);
+  const resultAsString = `
+      <p>Name: ${data.name}</p>
+      <p>Population: ${data.population}</p>
+      <p>Climate: ${data.climate}</p>
+      <p>Gravity: ${data.gravity}</p>
+      <p>Rotation Period: ${data.rotation_period}</p>
+      <p>Orbital Period: ${data.orbital_period}</p>
+      <p>Residents: ${residents.length === 0 ? 'unknown' : residents}</p>
+  `;
+  return resultAsString;
 }
 
 //* -------------------- Events --------------------
 buttons.forEach((button) => {
   button.addEventListener('click', async () => {
+    showResults.innerHTML = '';
     switch(button.value) {
       case 'films':
-        (await displayFilms(fetchFilms(`${BASE_URL}${button.value}`)));
+        try {
+          const response = await fetch(`${BASE_URL}${button.value}`);
+          const data = await response.json() as IFilms;
+
+          await Promise.all(data.results.map(async (result: IFilmsResult) => {
+            const filmContainer = document.createElement('div') as HTMLDivElement;
+            filmContainer.classList.add('container');
+            filmContainer.innerHTML = await displayFilms(result);
+            showResults.appendChild(filmContainer);
+          }))
+        } catch(error) {
+          console.error(error);
+        }
         break;
       case 'people':
-        (await displayCharacters(fetchCharacters(`${BASE_URL}${button.value}`)));
+        try {
+          (await displayCharacters(fetchCharacters(`${BASE_URL}${button.value}`)));
+        } catch(error) {
+          console.error(error);
+        }
         break;
       case 'planets':
-        (await displayPlanets(fetchPlanets(`${BASE_URL}${button.value}`)));
+        try {
+          const response = await fetch(`${BASE_URL}${button.value}`);
+          const planets: IPlanets = await response.json();
+          let pagesCount: number = 1;
+          const allPlanets: IPlanetsResult[] = [];
+        
+          do {
+            const response = await fetch(`${BASE_URL}${button.value}/?page=${pagesCount}`);
+            const data: IPlanets = await response.json();
+            data.results.forEach((planet) => allPlanets.push(planet));
+            pagesCount++;
+          } while(pagesCount <= Math.ceil(planets.count / 10));
+
+          await Promise.all(allPlanets.map(async (result: IPlanetsResult) => {
+            const container = document.createElement('div') as HTMLDivElement;
+            container.classList.add('container');
+            container.innerHTML = await displayPlanets(result);
+            showResults.appendChild(container);
+          }))
+        } catch(error) {
+          console.error(error);
+        }
         break;
     }
   })

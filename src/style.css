@@ -41,9 +41,11 @@ main {
 #showResults {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-#showResults ul {
+#showResults .container {
   flex-direction: column;
   align-items: center;
   border: 2px solid #000;
@@ -51,5 +53,6 @@ main {
   box-shadow: #00000049 -4px -4px 4px inset;
   padding: 0.8rem;
   background-color: #000000d9;
-  color: gold
+  color: gold;
+  width: 500px;
 }
